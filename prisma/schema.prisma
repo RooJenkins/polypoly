@@ -1,0 +1,156 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Agent {
+  id               String   @id @default(uuid())
+  name             String
+  model            String
+  color            String
+  accountValue     Float    @default(10000)
+  cashBalance      Float    @default(10000)
+  startingValue    Float    @default(10000)
+  broker           String   @default("simulation") // alpaca, tradier, webull, td-ameritrade, interactive-brokers, simulation
+  isLive           Boolean  @default(false)        // Deprecated: Use broker field instead
+  alpacaAccountId  String?                         // Deprecated: Broker-specific
+  lastSyncAt       DateTime?                       // Last sync with broker
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  positions         Position[]
+  trades            Trade[]
+  decisions         Decision[]
+  performancePoints PerformancePoint[]
+}
+
+model Position {
+  id                   String   @id @default(uuid())
+  agentId              String
+  symbol               String
+  name                 String
+  side                 String   @default("LONG") // LONG or SHORT
+  quantity             Float
+  entryPrice           Float
+  currentPrice         Float
+  unrealizedPnL        Float
+  unrealizedPnLPercent Float
+  openedAt             DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
+}
+
+model Trade {
+  id           String   @id @default(uuid())
+  agentId      String
+  symbol       String
+  name         String
+  action       String // BUY, SELL, SELL_SHORT, or BUY_TO_COVER
+  quantity     Float
+  price        Float
+  total        Float
+  realizedPnL  Float?
+  reasoning    String
+  confidence   Float
+  timestamp    DateTime @default(now())
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
+  @@index([timestamp])
+}
+
+model Decision {
+  id           String   @id @default(uuid())
+  agentId      String
+  timestamp    DateTime @default(now())
+
+  // Market data at time of decision
+  portfolioValue Float
+  cashBalance    Float
+
+  // Decision details
+  action         String // BUY, SELL, SELL_SHORT, BUY_TO_COVER, or HOLD
+  symbol         String?
+  quantity       Float?
+  confidence     Float
+  reasoning      String
+  riskAssessment String
+  targetPrice    Float?
+  stopLoss       Float?
+  invalidationCondition String? // Exists in production DB
+
+  // Market context
+  marketDataSnapshot String // JSON string of market data
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
+  @@index([timestamp])
+}
+
+model PerformancePoint {
+  id           String   @id @default(uuid())
+  agentId      String
+  timestamp    DateTime @default(now())
+  accountValue Float
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
+  @@index([timestamp])
+}
+
+model StockPrice {
+  id             String   @id @default(uuid())
+  symbol         String
+  name           String
+  price          Float
+  change         Float
+  changePercent  Float
+  volume         Float?
+  timestamp      DateTime @default(now())
+
+  @@index([symbol])
+  @@index([timestamp])
+}
+
+model BenchmarkPosition {
+  id           String   @id @default(uuid())
+  agentId      String
+  symbol       String
+  shares       Float
+  initialPrice Float
+  initialValue Float
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([agentId, symbol])
+  @@index([agentId])
+}
+
+model NewsItem {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  url         String
+  source      String
+  publishedAt DateTime
+  symbols     String // Comma-separated stock symbols
+  sentiment   String? // POSITIVE, NEGATIVE, NEUTRAL
+  createdAt   DateTime @default(now())
+
+  @@index([publishedAt])
+  @@index([symbols])
+}

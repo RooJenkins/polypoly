@@ -1,0 +1,45 @@
+name: Trading Cycle Automation
+
+on:
+  schedule:
+    # Runs at 0 and 30 minutes past each hour from 14:00-21:00 UTC (9:00 AM - 4:30 PM EST)
+    # Markets are open Mon-Fri
+    - cron: '0,30 14-21 * * 1-5'
+
+  # Allows manual triggering from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  trigger-trading-cycle:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Trading Cycle
+        run: |
+          echo "🚀 Triggering trading cycle at $(date)"
+
+          # Call the Vercel API endpoint
+          response=$(curl -s -w "\n%{http_code}" -X GET \
+            "${{ secrets.VERCEL_APP_URL }}/api/cron/trading-cycle" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "📊 Response code: $http_code"
+          echo "📄 Response body: $body"
+
+          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+            echo "✅ Trading cycle triggered successfully!"
+          else
+            echo "❌ Trading cycle failed with code $http_code"
+            exit 1
+          fi
+
+      - name: Log Completion
+        if: success()
+        run: echo "✅ Trading cycle completed at $(date)"
+
+      - name: Log Failure
+        if: failure()
+        run: echo "❌ Trading cycle failed at $(date)"

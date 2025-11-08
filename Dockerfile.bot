@@ -1,0 +1,25 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy necessary files for the bot
+COPY scripts/trading-bot.ts ./scripts/
+COPY lib ./lib/
+COPY types ./types/
+COPY tsconfig.json ./
+
+# Generate Prisma Client
+RUN npx prisma generate
+
+# Install ts-node for running TypeScript
+RUN npm install -g tsx
+
+# Push schema to database then start the trading bot
+CMD sh -c "npx prisma db push --skip-generate --accept-data-loss && tsx scripts/trading-bot.ts"
