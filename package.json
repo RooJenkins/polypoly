@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "trading-bot": "tsx scripts/trading-bot.ts"
+    "trading-bot": "tsx scripts/trading-bot.ts",
+    "test:scanner": "tsx scripts/test-market-scanner.ts",
+    "test:ui": "playwright test tests/e2e/visual-test.spec.ts",
+    "test:ui:headed": "playwright test tests/e2e/visual-test.spec.ts --headed",
+    "test:all": "npm run test:scanner && npm run test:ui"
   },
   "dependencies": {
     "@alpacahq/alpaca-trade-api": "^3.1.3",
