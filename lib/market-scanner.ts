@@ -9,8 +9,13 @@
  * - Yahoo Finance (unlimited, free) - Everything else
  */
 
-import yahooFinance from 'yahoo-finance2';
+import YahooFinance from 'yahoo-finance2';
 import axios from 'axios';
+
+// Create Yahoo Finance client instance
+const yahooFinance = new YahooFinance({
+  validation: { logErrors: false, logOptionsErrors: false },
+});
 
 // =====================================================
 // CRYPTOCURRENCY DATA (CoinGecko API - REAL DATA)
