@@ -43,12 +43,14 @@ model Position {
   currentPrice         Float
   unrealizedPnL        Float
   unrealizedPnLPercent Float
+  assetClass           String   @default("stocks") // stocks, crypto, commodities, bonds, forex, REITs
   openedAt             DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
   agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
   @@index([agentId])
+  @@index([assetClass])
 }
 
 model Trade {
@@ -63,12 +65,14 @@ model Trade {
   realizedPnL  Float?
   reasoning    String
   confidence   Float
+  assetClass   String   @default("stocks") // stocks, crypto, commodities, bonds, forex, REITs
   timestamp    DateTime @default(now())
 
   agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
   @@index([agentId])
   @@index([timestamp])
+  @@index([assetClass])
 }
 
 model Decision {
@@ -120,10 +124,12 @@ model StockPrice {
   change         Float
   changePercent  Float
   volume         Float?
+  assetClass     String   @default("stocks") // stocks, crypto, commodities, bonds, forex, REITs
   timestamp      DateTime @default(now())
 
   @@index([symbol])
   @@index([timestamp])
+  @@index([assetClass])
 }
 
 model BenchmarkPosition {

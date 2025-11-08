@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { fetchStockPrices } from '@/lib/stock-api';
+import { calculatePortfolioAllocation, getAllocationSummary } from '@/lib/portfolio-allocation';
 
 export const dynamic = 'force-dynamic';
 
@@ -109,6 +110,17 @@ export async function GET() {
           }
         }
 
+        // Calculate portfolio allocation by asset class
+        let allocation = null;
+        let allocationSummary = null;
+        try {
+          const portfolioBreakdown = await calculatePortfolioAllocation(agent.id);
+          allocation = portfolioBreakdown.allocations;
+          allocationSummary = getAllocationSummary(portfolioBreakdown);
+        } catch (error) {
+          console.error(`Error calculating allocation for ${agent.name}:`, error);
+        }
+
         return {
           id: agent.id,
           name: agent.name,
@@ -124,6 +136,8 @@ export async function GET() {
           tradeCount: trades.length,
           biggestWin,
           biggestLoss,
+          allocation,
+          allocationSummary,
         };
       })
     );

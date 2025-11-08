@@ -10,6 +10,7 @@ import { getBroker, getBrokerDisplayName, type BrokerType } from './brokers';
 import { validateTrade, validateExitParameters, logSafetyViolation } from './safety-limits';
 import { checkAndExecuteExits } from './exit-manager';
 import { updateBenchmarkPerformance } from './benchmark';
+import { getAssetClass } from './asset-class-detector';
 // NEW: Advanced intelligence modules
 import { getMarketContext, calculateRelativeStrength, type MarketContext } from './market-context';
 import { calculatePortfolioMetrics, getPortfolioRecommendations, type PortfolioMetrics } from './portfolio-intelligence';
@@ -842,6 +843,7 @@ async function executeBuy(agent: any, decision: any, stocks: Stock[]) {
         currentPrice: execution.executedPrice!,
         unrealizedPnL: 0,
         unrealizedPnLPercent: 0,
+        assetClass: getAssetClass(stock.symbol),
         // targetPrice, stopLoss, invalidationCondition, entryDecisionId removed - not in production schema
       },
     });
@@ -874,6 +876,7 @@ async function executeBuy(agent: any, decision: any, stocks: Stock[]) {
       total: totalCost,
       reasoning: decision.reasoning,
       confidence: decision.confidence,
+      assetClass: getAssetClass(stock.symbol),
       // decisionId removed - not in production schema
     },
   });
@@ -934,6 +937,7 @@ async function executeSell(agent: any, decision: any, stocks: Stock[]) {
       realizedPnL,
       reasoning: decision.reasoning,
       confidence: decision.confidence,
+      assetClass: getAssetClass(stock.symbol),
       // decisionId, exitReason removed - not in production schema
     },
   });
@@ -1030,6 +1034,7 @@ async function executeShort(agent: any, decision: any, stocks: Stock[]) {
       currentPrice: stock.price,
       unrealizedPnL: 0,
       unrealizedPnLPercent: 0,
+      assetClass: getAssetClass(stock.symbol),
       // targetPrice, stopLoss, invalidationCondition, entryDecisionId removed - not in production schema
     },
   });
@@ -1050,6 +1055,7 @@ async function executeShort(agent: any, decision: any, stocks: Stock[]) {
       total: totalValue,
       reasoning: decision.reasoning,
       confidence: decision.confidence,
+      assetClass: getAssetClass(stock.symbol),
       // decisionId removed - not in production schema
     },
   });
@@ -1103,7 +1109,7 @@ async function executeCover(agent: any, decision: any, stocks: Stock[]) {
     data: {
       agentId: agent.id,
       symbol: stock.symbol,
-      name: stock.name,
+      name: stock.symbol,
       action: 'BUY_TO_COVER',
       quantity: position.quantity,
       price: stock.price,
@@ -1111,6 +1117,7 @@ async function executeCover(agent: any, decision: any, stocks: Stock[]) {
       realizedPnL,
       reasoning: decision.reasoning,
       confidence: decision.confidence,
+      assetClass: getAssetClass(stock.symbol),
       // decisionId, exitReason removed - not in production schema
     },
   });
